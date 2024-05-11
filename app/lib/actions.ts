@@ -6,6 +6,79 @@ import { sql } from '@vercel/postgres';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+const FormSchemaCustomer = z.object({
+    id: z.string(),
+    name: z.string({
+        invalid_type_error: 'Please select a customer.',
+    }),
+    email: z.string({
+        invalid_type_error: 'Please select a customer.',
+    }),
+    image_url: z.string({
+        invalid_type_error: 'Please select a customer.',
+    }),
+
+    date: z.string(),
+});
+
+
+
+const CreateCustomerSchema = FormSchemaCustomer.omit({ id: true, date: true });
+
+export async function createCustomer(prevState: State, formData: FormData) {
+    // Validate form using Zod
+    const validatedFields = CreateCustomerSchema.safeParse({
+        name: formData.get('name'),
+        email: formData.get('email'),
+        image_url: formData.get('image_url'),
+    });
+
+    // Nếu việc kiểm tra biểu mẫu thất bại, trả về lỗi sớm. Nếu không, tiếp tục.
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Thiếu Thông Tin. Không Thể Tạo Khách Hàng.',
+        };
+    }
+
+    // Chuẩn bị dữ liệu để chèn vào cơ sở dữ liệu
+    const { name, email, image_url } = validatedFields.data;
+  
+
+    // Chèn dữ liệu vào cơ sở dữ liệu
+    try {
+        await sql`
+            INSERT INTO customers (name, email, image_url)
+            VALUES (${name}, ${email}, ${image_url})
+        `;
+    } catch (error) {
+        // Nếu có lỗi cơ sở dữ liệu xảy ra, trả về một thông báo lỗi cụ thể hơn.
+        return {
+            message: 'Lỗi Cơ Sở Dữ Liệu: Không Thể Tạo Khách Hàng.',
+        };
+    }
+
+    // Kiểm tra lại bộ nhớ cache cho trang khách hàng và chuyển hướng người dùng.
+    revalidatePath('/dashboard/customers');
+    redirect('/dashboard/customers');
+}
+
+export async function deleteCustomer(id: string) {
+
+    try {
+        await sql`DELETE FROM customers WHERE id = ${id}`;
+        revalidatePath('/dashboard/customers');
+        return { message: 'Deleted customers.' };
+    } catch (error) {
+        return { message: 'Database Error: Failed to Delete Invoice.' };
+    }
+}
+
+
+
+
+
+
 const FormSchema = z.object({
     id: z.string(),
     customerId: z.string({
@@ -22,12 +95,18 @@ const FormSchema = z.object({
 
 export type State = {
     errors?: {
+        name?: string[];
+
+        email?: string[];
+        image_url?: string[];
         customerId?: string[];
+
         amount?: string[];
         status?: string[];
     };
     message?: string | null;
 };
+
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 
 export async function createInvoice(prevState: State, formData: FormData) {
@@ -106,7 +185,7 @@ export async function updateInvoice(
 }
 
 export async function deleteInvoice(id: string) {
-    throw new Error('Failed to Delete Invoice');
+
 
     try {
         await sql`DELETE FROM invoices WHERE id = ${id}`;
@@ -136,3 +215,5 @@ export async function authenticate(
         throw error;
     }
 }
+
+
