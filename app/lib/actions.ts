@@ -6,6 +6,8 @@ import { sql } from '@vercel/postgres';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+
+
 const FormSchemaCustomer = z.object({
     id: z.string(),
     name: z.string({
@@ -20,6 +22,18 @@ const FormSchemaCustomer = z.object({
 
     date: z.string(),
 });
+
+const FormSchemaUpdateCustomer = z.object({
+    id: z.string(),
+    name: z.string({
+        invalid_type_error: 'Please select a customer.',
+    }),
+    email: z.string({
+        invalid_type_error: 'Please select a customer.',
+    }),
+
+});
+
 
 
 
@@ -72,6 +86,42 @@ export async function deleteCustomer(id: string) {
     } catch (error) {
         return { message: 'Database Error: Failed to Delete Invoice.' };
     }
+}
+
+
+const UpdateCustomer = FormSchemaUpdateCustomer.omit({ id: true, date: true });
+
+export async function updateCustomer(
+    id: string,
+    prevState: State,
+    formData: FormData,
+) {
+    const validatedFields = UpdateCustomer.safeParse({
+        name: formData.get('name'),
+        email: formData.get('email'),
+
+    });
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Missing Fields. Failed to Update Customer.',
+        };
+    }
+
+    const { name, email } = validatedFields.data;
+    try {
+        await sql`
+            UPDATE customers
+            SET name = ${name}, email = ${email}
+            WHERE id = ${id}
+        `;
+    } catch (error) {
+        return { message: 'Database Error: Failed to Update Customer.' };
+    }
+
+    revalidatePath('/dashboard/customers');
+    redirect('/dashboard/customers');
 }
 
 

@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { lusitana } from '@/app/ui/fonts';
 import Search from '@/app/ui/search';
 import { fetchFilteredCustomers } from '@/app/lib/data';
-import { UpdateInvoice, DeleteCustomer } from '@/app/ui/customers/buttons';
+import { UpdateCustomer, DeleteCustomer } from '@/app/ui/customers/buttons';
 export async function CustomersTable({
   query,
   currentPage,
@@ -14,10 +14,8 @@ export async function CustomersTable({
 
   return (
     <div className="w-full">
-      <h1 className={`${lusitana.className} mb-8 text-xl md:text-2xl`}>
-        Customers
-      </h1>
-      <Search placeholder="Search customers..." />
+
+
       <div className="mt-6 flow-root">
 
         <div className="overflow-x-auto">
@@ -40,7 +38,7 @@ export async function CustomersTable({
                               width={28}
                               height={28}
                             />
-                            <p>{customer.name}</p>
+                            {/* <p>{customer.name}</p> */}
                           </div>
                         </div>
                         <p className="text-sm text-gray-500">
@@ -112,12 +110,12 @@ export async function CustomersTable({
                       <td className="whitespace-nowrap bg-white px-4 py-5 text-sm group-first-of-type:rounded-md group-last-of-type:rounded-md">
                         {customer.total_paid}
                       </td>
-                      <td className="whitespace-nowrap bg-white px-4 py-5 text-sm group-first-of-type:rounded-md group-last-of-type:rounded-md">
 
-{/* 
-                        <UpdateInvoice id={invoice.id} /> */}
-                        <DeleteCustomer id={customer.id} />
-
+                      <td className="whitespace-nowrap py-3 pl-6 pr-3">
+                        <div className="flex justify-end gap-3">
+                          <UpdateCustomer id={customer.id} />
+                          <DeleteCustomer id={customer.id} />
+                        </div>
                       </td>
 
                     </tr>

@@ -1,6 +1,7 @@
 import { sql } from '@vercel/postgres';
 import { unstable_noStore as noStore } from 'next/cache';
 import {
+  CustomerForm,
   CustomerField,
   CustomersTableType,
   InvoiceForm,
@@ -167,6 +168,7 @@ export async function fetchCustomerPages(query: string) {
     throw new Error('Failed to fetch total number of customers.');
   }
 }
+
 export async function fetchInvoiceById(id: string) {
   try {
     const data = await sql<InvoiceForm>`
@@ -193,7 +195,34 @@ export async function fetchInvoiceById(id: string) {
   noStore();
 }
 
+
+
+
+export async function fetchCustomerById(id: string) {
+  noStore();
+  
+  try {
+    const customer = await sql<CustomerForm>`
+      SELECT
+        id, name, email
+      FROM customers
+      WHERE
+        id = ${id};
+    `;
+
+    return customer.rows[0];
+  } catch (error) {
+    console.error('Database Error:', error);
+
+    return false // we can't return an error, because it can break the not-found functionality at app\dashboard\invoices\[id]\edit\not-found.tsx
+  }
+}
+
+
+
 export async function fetchCustomers() {
+
+  noStore();
   try {
     const data = await sql<CustomerField>`
       SELECT
@@ -209,7 +238,7 @@ export async function fetchCustomers() {
     console.error('Database Error:', err);
     throw new Error('Failed to fetch all customers.');
   }
-  noStore();
+  
 
 }
 
@@ -218,6 +247,7 @@ export async function fetchFilteredCustomers(
   currentPage: number,
 
 ) {
+  noStore();
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
   try {
     const data = await sql<CustomersTableType>`
@@ -251,7 +281,7 @@ export async function fetchFilteredCustomers(
     console.error('Database Error:', err);
     throw new Error('Failed to fetch customer table.');
   }
-  noStore();
+ 
 }
 
 export async function getUser(email: string) {
