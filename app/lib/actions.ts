@@ -23,6 +23,7 @@ const FormSchemaCustomer = z.object({
     date: z.string(),
 });
 
+
 const FormSchemaUpdateCustomer = z.object({
     id: z.string(),
     name: z.string({
@@ -33,7 +34,6 @@ const FormSchemaUpdateCustomer = z.object({
     }),
 
 });
-
 
 
 
@@ -76,6 +76,7 @@ export async function createCustomer(prevState: State, formData: FormData) {
     revalidatePath('/dashboard/customers');
     redirect('/dashboard/customers');
 }
+
 
 export async function deleteCustomer(id: string) {
 
